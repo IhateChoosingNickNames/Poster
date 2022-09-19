@@ -735,10 +735,28 @@ class NewClass(TestCase):
             group=self.test_group,
         )
 
+        cache_timer_seconds = 20
+
         # Логика проверки: если кэш включен, то после 2-ого
-        # get-запроса не будет возвращено контекста.
+        # get-запроса не будет возвращено контекста. Ну и проверка на наличие
+        # ограничения по времени
 
         response = self.test_client.get(reverse("posts:index"))
+
+        cache_control = response.get('cache-control', None)
+        cache_control_time = int(cache_control.split('=')[1])
+
+        self.assertIsNotNone(
+            cache_control,
+            "Проверьте, что добавали кэширование на главную страницу"
+        )
+
+        self.assertEqual(
+            cache_control_time,
+            cache_timer_seconds,
+            ("Проверьте, что задали таймер обновления кэша в "
+             f"{cache_timer_seconds} секунд")
+        )
 
         self.assertIsNotNone(response.context)
 
