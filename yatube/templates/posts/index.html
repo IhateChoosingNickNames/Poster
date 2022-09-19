@@ -1,0 +1,32 @@
+<!-- templates/posts/index.html -->
+
+{% extends 'base.html' %}
+
+{% block title %}
+  Главная страница
+{% endblock %}
+
+{% block content %}
+
+    {% include 'includes/switcher.html' %}
+
+    {% for post in posts %}
+      <article>
+
+        {% include 'includes/fullpost.html' %}
+
+      </article>
+
+      {% if not forloop.last %}
+        <hr>
+      {% endif %}
+
+    {% endfor %}
+
+    {% if not follow %}
+        <p>
+          <a href="{% url 'posts:real_group_list' %}"> Список всех групп </a>
+        </p>
+    {% endif %}
+
+{% endblock %}

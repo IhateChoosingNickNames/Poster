@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Ошибка проверки CSRF
+{% endblock %}
+
+{% block content %}
+
+    <div class="row justify-content-center">
+      <div class="col-md-8 p-5">
+        <div class="card">
+          <div class="card-header">
+            Oops...
+          </div>
+          <div class="card-body">
+
+            <p>
+              Ошибка проверки CSRF-токена
+            </p>
+
+            <p>
+              Если проблема сохранится после перезапуска браузера - свяжитесь с
+                <a href="{% url 'posts:feedback' %}"> нами.</a>
+            </p>
+
+            <p>
+                <a href="{% url 'posts:index' %}"> Возврат на главную страницу </a>
+            </p>
+
+          </div> <!-- card body -->
+        </div> <!-- card -->
+      </div> <!-- col -->
+    </div> <!-- row -->
+
+{% endblock %}

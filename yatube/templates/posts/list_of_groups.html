@@ -1,0 +1,26 @@
+<!-- templates/posts/list_of_groups.html -->
+
+{% extends 'base.html' %}
+
+{% block title %}
+  Список всех групп
+{% endblock %}
+
+{% block content %}
+
+    <h2> Список всех групп </h2>
+    <ol>
+      {% for group in groups %}
+        <li>
+          <h4> {{ group }} </h4>
+            <h5>
+              <a href="{% url 'posts:group_archive' group.slug %}"> Архив группы </a>
+            </h5>
+        </li>
+      {% endfor %}
+    </ol>
+      <p>
+        <a href="{% url 'posts:index' %}"> Возврат на главную страницу </a>
+      </p>
+
+{% endblock %}

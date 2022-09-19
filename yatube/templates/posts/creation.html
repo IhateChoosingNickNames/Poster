@@ -1,0 +1,29 @@
+<!-- templates/posts/includes/creation.html -->
+
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if not is_comment %}
+        {% if is_edit %}
+            Редактирование поста
+        {% else %}
+            Добавление нового поста
+        {% endif %}
+    {% else %}
+        {% if is_edit %}
+            Редактирование комментария
+        {% else %}
+            Добавление нового комментария
+        {% endif %}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="container py-5">
+        <div class="row justify-content-center">
+          <div class="col-md-8 p-5">
+            {% include 'includes/form.html' %}
+          </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,17 @@
+<!-- templates/posts/includes/feedback.html -->
+
+{% extends 'base.html' %}
+
+{% block title %}
+  Обратная связь
+{% endblock %}
+
+{% block content %}
+
+  <div class="row justify-content-center">
+    <div class="col-md-8 p-5">
+        {% include 'includes/form.html' with header='Обратная связь' %}
+    </div>
+  </div>
+
+{% endblock %}

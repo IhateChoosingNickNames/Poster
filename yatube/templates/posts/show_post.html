@@ -1,0 +1,193 @@
+<!-- templates/posts/show_post.html -->
+
+{% extends 'base.html' %}
+
+{% load thumbnail %}
+
+{% block title %}
+  Страница поста {{ post.id }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="row">
+    <aside class="col-12 col-md-3">
+      <ul class="list-group list-group-flush">
+
+        {# Название поста #}
+        <li class="list-group-item">
+          Название: <b>{{ post.title }}</b>
+        </li>
+
+        <li class="list-group-item">
+          Дата публикации: {{ post.pub_date|date:"d E Y" }}
+        </li>
+
+        <li class="list-group-item">
+            {% if post.group %}
+                <p>Группа: {{ post.group }}</p>
+                <p>
+                  <a href="{% url 'posts:group_list' post.group.slug %}"> Все записи группы {{ post.group.slug }} </a>
+                </p>
+            {% else %}
+              <p> Группа отсутствует </p>
+            {% endif %}
+        </li>
+
+        <li class="list-group-item">
+          Автор: {{ post.author.get_full_name }}
+        </li>
+
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          Всего постов автора:  <span >{{ post.author.posts.count }}</span>
+        </li>
+
+        <li class="list-group-item">
+          <a href="{% url 'posts:show_profile' post.author %}">
+            все посты пользователя
+          </a>
+        </li>
+
+      </ul>
+    </aside>
+    <article class="col-12 col-md-9">
+
+      <div style="padding-left:0px">
+          <div style="padding-bottom:20px">
+            {% thumbnail post.image "1280x1024" crop="center" upscale=True as im %}
+                <img class="card-img my-2" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}">
+            {% endthumbnail %}
+          </div>
+      </div>
+
+      <p>
+          {{ post.text|linebreaksbr }}
+      </p>
+
+      {% if request.user.is_authenticated %}
+
+          <div style="padding-bottom:40px">
+              <p align="right">
+                  {% if request.user == post.author %}
+                    <a class="btn btn-primary"  href="{% url 'posts:post_edit' post.id %}">
+                      Редактировать пост
+                    </a>
+                    <a class="btn btn-primary"  href="{% url 'posts:post_delete' post.id %}">
+                      Удалить пост
+                    </a>
+                  {% endif %}
+                    <a class="btn btn-primary" href="{% url 'posts:post_comment' post.id %}">
+                      Комментировать пост
+                    </a>
+              </p>
+          </div>
+
+      {% endif %}
+
+
+    </article>
+
+    <div class="container py-5">
+      <div class="row justify-content-center">
+
+        {% include 'includes/form.html' with is_comment=True %}
+
+      </div>
+    </div>
+
+    <hr>
+
+    <div style="padding-bottom:30px">
+
+        {% if not comments_count %}
+            <h3>Комментарии к посту отсутствуют</h3>
+        {% else %}
+            <h3>Комментариев к посту: {{ comments_count }}</h3>
+        {% endif %}
+
+    </div>
+
+      {% for comment in object_list %}
+
+        <article class="align-content-lg-around">
+            <div class="card mb-4">
+
+                <li class="list-group-item ">
+                    <div class="card-header">
+                      <p>Автор комментария: <b>{{ comment.author }}</b></p>
+                    </div>
+                    <div class="card-body">
+                      <p>
+                          <b>Сообщение</b>: {{ comment.text|linebreaksbr|truncatewords:30 }}
+                      </p>
+
+                      {% if comment.image %}
+                        <img class="img-fluid" width="500" height="600" src="{{ comment.image.url }}">
+                      {% endif %}
+
+                    </div>
+                </li>
+
+            </div>
+
+            {% if request.user.is_authenticated %}
+                <p align="right">
+                    {# Добавить выпадающий список комментариев #}
+                    {% if smth %}
+                        <a class="btn btn-info" href="">
+                            Раскрыть
+                        </a>
+                    {% endif %}
+
+                    <a class="btn btn-info" href="{% url 'posts:comment_comment' post.id comment.id %}">
+                        Комментировать
+                    </a>
+
+                    {% if request.user == comment.author %}
+                        <a class="btn btn-info" href="{% url 'posts:post_comment_edit' post.id comment.id %}">
+                            Редактировать
+                        </a>
+
+                    {% endif %}
+                </p>
+            {% endif %}
+
+            {# Обращение вида treads.comment.id не отработает #}
+            {% for key, value in treads.items %}
+                {% if key == comment.id %}
+
+                    <div style="padding-left:40px">
+                        {% for child_comment in value %}
+
+                            <li class="list-group-item ">
+
+                              <p>Автор комментария: <b>{{ child_comment.author }}</b></p>
+
+                              <p><b>Сообщение</b>: {{ child_comment.text|linebreaksbr|truncatewords:30 }}</p>
+
+                              {% if child_comment.image %}
+                                <img class="img-fluid" width="500" height="600" src="{{ child_comment.image.url }}">
+                              {% endif %}
+
+                            </li>
+
+                            {% if request.user == child_comment.author %}
+                                <p align="right">
+                                    <a class="btn btn-info" href="{% url 'posts:post_comment_edit' post.id child_comment.id %}">
+                                        Редактировать
+                                    </a>
+                                </p>
+                            {% endif %}
+
+                        {% endfor %}
+                    </div>
+
+                {% endif %}
+            {% endfor %}
+
+        </article>
+      {% endfor %}
+
+  </div>
+
+{% endblock %}

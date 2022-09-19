@@ -1,0 +1,37 @@
+<!-- templates/core/404.html -->
+
+{% extends 'base.html' %}
+
+{% block title %}
+    Страница не найдена
+{% endblock %}
+
+{% block content %}
+
+    <div class="row justify-content-center">
+      <div class="col-md-8 p-5">
+        <div class="card">
+          <div class="card-header">
+            Oops...
+          </div>
+          <div class="card-body">
+
+            <p>
+              Страница по пути "{{ path }}" не найдена, увы. :(
+            </p>
+
+            <p>
+              Если считаете, что такая страница должна существовать, то напишите нам об этом
+                <a href="{% url 'posts:feedback' %}"> сюда.</a>
+            </p>
+
+            <p>
+                <a href="{% url 'posts:index' %}"> Возврат на главную страницу </a>
+            </p>
+
+          </div> <!-- card body -->
+        </div> <!-- card -->
+      </div> <!-- col -->
+    </div> <!-- row -->
+
+{% endblock %}

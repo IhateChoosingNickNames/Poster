@@ -1,0 +1,44 @@
+<!-- templates/posts/group_list.html -->
+
+{% extends 'base.html' %}
+
+{% block title %}
+  {% if archive %}
+    Архив группы {{ group.title }}
+  {% else %}
+    Страница группы {{ group.title }}
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+
+    {% for post in posts %}
+      <article>
+        {% if forloop.first %}
+          <h1> {{ post.group.title }} </h1>
+          <p>{{ post.group.description }}</p>
+          <h2> Все доступные посты </h2>
+        {% endif %}
+
+        {% include 'includes/fullpost.html' with group=True %}
+
+        {% if forloop.last and not archive %}
+          <p>
+            <a href="{% url 'posts:group_archive' post.group.slug %}"> Архив группы </a>
+          </p>
+        {% endif %}
+
+      </article>
+
+        {% if not forloop.last %}
+            <hr>
+        {% endif %}
+
+    {% endfor %}
+
+      <p>
+        <a href="{% url 'posts:index' %}"> Возврат на главную страницу </a>
+      </p>
+
+{% endblock %}
+
