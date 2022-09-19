@@ -71,7 +71,7 @@ class PostsViewTest(TestCase):
         )
 
     def test_posts_group_list_has_correct_context(self):
-        """Проверка передачи корректного котекста на страницу страницу."""
+        """Проверка передачи корректного котекста на страницу группы."""
 
         test_groups = [self.test_group_1, self.test_group_2]
 
