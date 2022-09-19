@@ -50,6 +50,7 @@ class PostsViewTest(TestCase):
 
     def setUp(self):
         self.test_client = Client()
+        cache.clear()
 
     def test_posts_index_has_correct_context(self):
         """Проверка передачи корректного котекста на страницу группы."""
