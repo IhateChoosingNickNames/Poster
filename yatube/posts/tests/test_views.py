@@ -53,7 +53,7 @@ class PostsViewTest(TestCase):
         cache.clear()
 
     def test_posts_index_has_correct_context(self):
-        """Проверка передачи корректного котекста на страницу группы."""
+        """Проверка передачи корректного котекста на главную страницу."""
 
         response = self.test_client.get(reverse("posts:index"))
 
@@ -71,7 +71,7 @@ class PostsViewTest(TestCase):
         )
 
     def test_posts_group_list_has_correct_context(self):
-        """Проверка передачи корректного котекста на главную страницу."""
+        """Проверка передачи корректного котекста на страницу страницу."""
 
         test_groups = [self.test_group_1, self.test_group_2]
 
