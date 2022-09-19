@@ -7,7 +7,7 @@ class TemplateMixin:
     SHOW_POST_TEMPLATE = "posts/show_post.html"
     ADD_POST_TEMPLATE = "posts/creation.html"
     POST_PROFILE_TEMPLATE = "posts/profile.html"
-    FEEDBACK_TEMPLATE = 'posts/feedback.html'
+    FEEDBACK_TEMPLATE = "posts/feedback.html"
 
 
 class PaginationMixin:

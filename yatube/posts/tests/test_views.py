@@ -57,7 +57,7 @@ class PostsViewTest(TestCase):
 
         response = self.test_client.get(reverse("posts:index"))
 
-        # context_object_name = 'posts'
+        # context_object_name = "posts"
         latest_post = Post.objects.all()[0]
         first_index_post = response.context.get("posts")[0]
 
@@ -515,7 +515,7 @@ class SprintSixTest(TestCase):
         """
 
         test_post = Post.objects.create(
-            # title='Тестовый заголовок',
+            # title="Тестовый заголовок",
             author=self.test_user_1,
             text="Тестовый пост",
         )

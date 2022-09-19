@@ -10,7 +10,7 @@ urlpatterns = [
     path("auth/", include("django.contrib.auth.urls")),
     path("", include("posts.urls", namespace="posts")),
     path("about/", include("about.urls", namespace="about")),
-    path('captcha/', include('captcha.urls'))
+    path("captcha/", include("captcha.urls"))
 ]
 
 
@@ -26,7 +26,7 @@ if settings.DEBUG:
     )
 
 
-CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
-handler404 = 'core.views.page_not_found'
-handler500 = 'core.views.server_error'
-handler403 = 'core.views.permission_denied'
+CSRF_FAILURE_VIEW = "core.views.csrf_failure"
+handler404 = "core.views.page_not_found"
+handler500 = "core.views.server_error"
+handler403 = "core.views.permission_denied"

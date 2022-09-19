@@ -44,7 +44,7 @@ class PostCreateFormTests(TestCase):
         required_fields = [
             "text",
             "group",
-            'image'
+            "image"
         ]
 
         for field in required_fields:

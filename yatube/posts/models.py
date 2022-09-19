@@ -44,7 +44,7 @@ class Post(CreatedModel):
     image = models.ImageField(
         # Вырезано из-за тестов ЯП.
         # upload_to="photos/posts/%Y/%m/%d/",
-        upload_to='posts/',
+        upload_to="posts/",
         verbose_name="Изображение",
         blank=True,
         null=True,
