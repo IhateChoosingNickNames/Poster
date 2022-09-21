@@ -36,7 +36,7 @@ class PostsViewTest(TestCase):
 
         posts_fields = [
             Post(
-                text=f"Тестовый пост {str(num)}",
+                text=f"Тестовый пост {num}",
                 author=choice(authors),
                 group=choice(groups),
             )

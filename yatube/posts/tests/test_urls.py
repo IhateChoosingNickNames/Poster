@@ -84,8 +84,10 @@ class PostsURLTest(TestCase):
                 self.assertEqual(
                     reverse(page["namespace:name"], args=page["args"]),
                     page["url"],
-                    ("Проверьте, что верно указали namespace и name для "
-                     f"{page['url']}"),
+                    (
+                        "Проверьте, что верно указали namespace и name для "
+                        f"{page['url']}"
+                    ),
                 )
 
     def test_posts_correct_templates_used(self):
@@ -115,16 +117,16 @@ class PostsURLTest(TestCase):
         """
 
         test_pages = [
-            self.correct_page_data['index'],
-            self.correct_page_data['group_list'],
-            self.correct_page_data['show_profile'],
-            self.correct_page_data['show_post'],
+            self.correct_page_data["index"],
+            self.correct_page_data["group_list"],
+            self.correct_page_data["show_profile"],
+            self.correct_page_data["show_post"],
         ]
 
         for page in test_pages:
 
             with self.subTest(page=page):
-                response = self.test_client.get(page['url'])
+                response = self.test_client.get(page["url"])
                 self.assertEqual(
                     response.status_code,
                     http.client.OK,
@@ -160,12 +162,13 @@ class PostsURLTest(TestCase):
         """
 
         response = self.test_client.get(
-            self.correct_page_data['post_create']['url'], follow=True
+            self.correct_page_data["post_create"]["url"], follow=True
         )
 
-        redirect = (
-            reverse("users:login") + "?next=" + reverse("posts:post_create")
-        )
+        login_url = reverse("users:login")
+        create_url = reverse("posts:post_create")
+
+        redirect = f"{login_url}?next={create_url}"
 
         self.assertEqual(
             response.redirect_chain,
@@ -184,11 +187,19 @@ class PostsURLTest(TestCase):
         """
 
         response = self.test_client.get(
-            self.correct_page_data['post_edit']['url'], follow=True
+            self.correct_page_data["post_edit"]["url"], follow=True
         )
+
+        page = self.correct_page_data["show_post"]
+
         self.assertEqual(
             response.redirect_chain,
-            [(f"/posts/{self.test_post.id}/", http.client.FOUND)],
+            [
+                (
+                    reverse(page["namespace:name"], args=page["args"]),
+                    http.client.FOUND,
+                )
+            ],
             (
                 "Проверьте, что перенаправляете "
                 "незарегистрированного пользователя на страницу"
@@ -205,12 +216,19 @@ class PostsURLTest(TestCase):
         self.test_client.force_login(self.test_user_not_author)
 
         response = self.test_client.get(
-            self.correct_page_data['post_edit']['url'], follow=True
+            self.correct_page_data["post_edit"]["url"], follow=True
         )
+
+        page = self.correct_page_data["show_post"]
 
         self.assertEqual(
             response.redirect_chain,
-            [(f"/posts/{self.test_post.id}/", http.client.FOUND)],
+            [
+                (
+                    reverse(page["namespace:name"], args=page["args"]),
+                    http.client.FOUND,
+                )
+            ],
             (
                 "Проверьте, что перенаправляете "
                 "незарегистрированного пользователя на страницу"
@@ -223,7 +241,7 @@ class PostsURLTest(TestCase):
 
         self.test_client.force_login(self.test_user_author)
         response = self.test_client.get(
-            self.correct_page_data['post_edit']['url']
+            self.correct_page_data["post_edit"]["url"]
         )
         self.assertEqual(
             response.status_code,

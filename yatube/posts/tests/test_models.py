@@ -41,7 +41,7 @@ class PostModelTests(TestCase):
     def test_posts_post_model_text_help_text_and_verbose_name_in_russian(self):
         """Проверка наличия verbose_name и help_text на русском языке."""
 
-        fields = ["text", "image", "author", "group"]
+        fields = ("text", "image", "author", "group")
 
         for field in fields:
             with self.subTest(field=field):
@@ -70,8 +70,8 @@ class PostModelTests(TestCase):
     def test_posts_post_model_fields_blank_value(self):
         """Проверка полей на обязательность к заполнению."""
 
-        fields_true = ["image", "group", "created"]
-        fields_false = ["text", "author"]
+        fields_true = ("image", "group", "created")
+        fields_false = ("text", "author")
 
         for field in fields_true:
             with self.subTest(field=field):
@@ -110,7 +110,7 @@ class GroupModelTests(TestCase):
     def test_posts_text_verbose_name_in_russian_not_blank(self):
         """Проверка наличия verbose_name на русском языке"""
 
-        fields = ["title", "slug", "description"]
+        fields = ("title", "slug", "description")
 
         for field in fields:
             with self.subTest(field=field):

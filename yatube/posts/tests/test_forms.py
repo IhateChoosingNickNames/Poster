@@ -42,6 +42,16 @@ class PostCreateFormTests(TestCase):
     def setUp(self):
         self.test_client = Client()
 
+    def field_checker(self, check_data):
+
+        for check_pair in check_data:
+            with self.subTest(field=check_pair[0]):
+                self.assertEqual(
+                    check_pair[1],
+                    check_pair[2],
+                    ("Значение поля не соответствует ожидаемому"),
+                )
+
     def test_posts_anonymous_cannot_post(self):
         """Проверка пост-запроса от неавторизованного пользователя."""
 
@@ -125,6 +135,7 @@ class PostCreateFormTests(TestCase):
         }
 
         self.test_client.force_login(self.test_user)
+
         response = self.test_client.post(
             reverse("posts:post_create"), data=form_data, follow=True
         )
@@ -142,31 +153,23 @@ class PostCreateFormTests(TestCase):
         with open(image_path, "rb") as file:
             saved_image = file.read()
 
-        self.assertEqual(
-            saved_image,
-            small_gif,
-            "Проверьте, что у вас сохраняется корректная картинка",
-        )
+        check_data = [
+            ("image", saved_image, small_gif),
+            ("author", last_post.author, self.test_user),
+            ("group", last_post.group, self.test_group),
+        ]
 
-        self.assertEqual(
-            last_post.author,
-            self.test_user,
-            "Пост создается не от нужного автора",
-        )
-
-        self.assertEqual(
-            last_post.group,
-            self.test_group,
-            "У поста создается неверная группа",
-        )
+        self.field_checker(check_data)
 
         # Вырезано из-за тестов ЯП.
         # now = datetime.datetime.today()
 
+        image_path = "posts/" + uploaded.name
+
         self.assertTrue(
             Post.objects.filter(
-                text="Тестовый текст",
-                image="posts/small.gif",
+                text=form_data["text"],
+                image=image_path,
                 # Вырезано из-за тестов ЯП.
                 # image=f"photos/posts/{now.year}/{now.month:02d}/"
                 # f"{now.day:02d}/small.gif",
@@ -174,7 +177,8 @@ class PostCreateFormTests(TestCase):
             ).exists(),
             (
                 "Убедитесь, что сохраняется пост и картинка в правильной папке"
-                "по пути photos/posts/%Y/%m/%d/"
+                # "по пути photos/posts/%Y/%m/%d/"
+                "по пути /posts/"
             ),
         )
 
@@ -257,20 +261,10 @@ class PostCreateFormTests(TestCase):
 
         post = Post.objects.last()
 
-        self.assertEqual(
-            post.text,
-            changed_text,
-            "Проверьте, что при редактировании поста сохраняются " "изменения",
-        )
+        check_data = [
+            ("text", post.text, changed_text),
+            ("author", post.author, self.test_user),
+            ("group", post.group, self.test_group_2),
+        ]
 
-        self.assertEqual(
-            post.author,
-            self.test_user,
-            "Проверьте, что при редактировании поста сохраняются " "изменения",
-        )
-
-        self.assertEqual(
-            post.group,
-            self.test_group_2,
-            "Проверьте, что при редактировании поста сохраняются " "изменения",
-        )
+        self.field_checker(check_data)
