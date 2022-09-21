@@ -43,6 +43,7 @@ class PostCreateFormTests(TestCase):
         self.test_client = Client()
 
     def field_checker(self, check_data):
+        """Проверка равенства переданных кортежей."""
 
         for check_pair in check_data:
             with self.subTest(field=check_pair[0]):
