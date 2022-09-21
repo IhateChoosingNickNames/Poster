@@ -137,7 +137,7 @@ class PostCreateFormTests(TestCase):
 
         last_post = Post.objects.last()
 
-        image_path = os.path.join(TEMP_MEDIA_ROOT + r"\posts", uploaded.name)
+        image_path = os.path.join(TEMP_MEDIA_ROOT, "posts", uploaded.name)
 
         with open(image_path, "rb") as file:
             saved_image = file.read()
