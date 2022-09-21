@@ -12,10 +12,12 @@
     <ol>
       {% for group in groups %}
         <li>
-          <h4> {{ group }} </h4>
-            <h5>
+          <h4>
+              {{ group }}
+          </h4>
+          <h5>
               <a href="{% url 'posts:group_archive' group.slug %}"> Архив группы </a>
-            </h5>
+          </h5>
         </li>
       {% endfor %}
     </ol>

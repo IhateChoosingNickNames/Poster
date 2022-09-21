@@ -9,10 +9,6 @@ class PostAdmin(admin.ModelAdmin):
     search_fields = ("text",)
     list_filter = ("created",)
     empty_value_display = "-пусто-"
-    # Если вдруг кто-то увидит этот коммент: откуда растут ноги у
-    # list_editable? У меня в админке на каждый новый пост происходит
-    # однотипный запрос к моделям групп. И ни через какой select_related()
-    # это не убирается. -_-
     list_editable = ("group",)
     readonly_fields = ("group",)
     list_select_related = ("author", "group")
@@ -26,6 +22,7 @@ class GroupAdmin(admin.ModelAdmin):
         "slug",
         "description",
     )
+    prepopulated_fields = {"slug": ("title",)}
     search_fields = ("title",)
     list_filter = ("slug",)
     empty_value_display = "-пусто-"

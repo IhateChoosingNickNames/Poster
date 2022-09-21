@@ -1,3 +1,7 @@
+from django import forms
+from django.utils.translation import gettext_lazy as _
+
+
 class TemplateMixin:
     """Контейнер хранения шаблонов."""
 
@@ -14,3 +18,25 @@ class PaginationMixin:
     """Миксин пагинации."""
 
     paginate_by = 10
+
+
+class ValidationMixin:
+
+    MIN_TEXT_LENGTH = 10
+    PROHIBITED_WORDS = []
+
+    def clean_text(self):
+        data = self.cleaned_data["text"]
+        if len(data) < self.MIN_TEXT_LENGTH:
+            raise forms.ValidationError(
+                _(
+                    "Длинна текста меньше допустимых "
+                    f"{self.MIN_TEXT_LENGTH} символов."
+                )
+            )
+
+        for word in self.PROHIBITED_WORDS:
+            if word in data.lower():
+                raise forms.ValidationError(_("Не надо материться."))
+
+        return data

@@ -1,12 +1,9 @@
 import http.client
 
-from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.test import Client, TestCase
 from django.urls import reverse
-from posts.models import Group, Post
-
-User = get_user_model()
+from posts.models import Group, Post, User
 
 
 class PostsURLTest(TestCase):
@@ -19,10 +16,13 @@ class PostsURLTest(TestCase):
             slug="test_slug_1",
             description="Test descripition 1",
         )
+
         cls.test_user_author = User.objects.create_user("test_user_author")
+
         cls.test_user_not_author = User.objects.create_user(
             "test_user_not_author"
         )
+
         cls.test_post = Post.objects.create(
             text=(
                 "Тестовый текст и еще несколько дополнительный символов, "
@@ -31,42 +31,80 @@ class PostsURLTest(TestCase):
             author=cls.test_user_author,
         )
 
+        cls.correct_page_data = {
+            "index": {
+                "namespace:name": "posts:index",
+                "args": "",
+                "url": "/",
+                "template": "posts/index.html",
+            },
+            "group_list": {
+                "namespace:name": "posts:group_list",
+                "args": [cls.test_group.slug],
+                "url": f"/group/{cls.test_group.slug}/",
+                "template": "posts/group_list.html",
+            },
+            "show_profile": {
+                "namespace:name": "posts:show_profile",
+                "args": [cls.test_user_author.username],
+                "url": f"/profile/{cls.test_user_author.username}/",
+                "template": "posts/profile.html",
+            },
+            "show_post": {
+                "namespace:name": "posts:show_post",
+                "args": [cls.test_post.id],
+                "url": f"/posts/{cls.test_post.id}/",
+                "template": "posts/show_post.html",
+            },
+            "post_create": {
+                "namespace:name": "posts:post_create",
+                "args": "",
+                "url": "/create/",
+                "template": "posts/creation.html",
+            },
+            "post_edit": {
+                "namespace:name": "posts:post_edit",
+                "args": [cls.test_post.id],
+                "url": f"/posts/{cls.test_post.id}/edit/",
+                "template": "posts/creation.html",
+            },
+        }
+
     def setUp(self):
         self.test_client = Client()
         self.authorized_client = Client
+
+    def test_posts_reverses_names_namespaces_have_correct_urls(self):
+        """Проверка соответствия reverse(namespace:name) нужным урлам."""
+
+        for adress_name in self.correct_page_data:
+            cache.clear()
+            page = self.correct_page_data[adress_name]
+            with self.subTest(adress=adress_name):
+                self.assertEqual(
+                    reverse(page["namespace:name"], args=page["args"]),
+                    page["url"],
+                    ("Проверьте, что верно указали namespace и name для "
+                     f"{page['url']}"),
+                )
 
     def test_posts_correct_templates_used(self):
         """Проверка использования корректных шаблонов для всех страниц."""
 
         self.test_client.force_login(self.test_user_author)
 
-        used_paths = {
-            reverse("posts:index"): "posts/index.html",
-            reverse(
-                "posts:group_list", args=[self.test_group.slug]
-            ): "posts/group_list.html",
-            reverse(
-                "posts:show_profile", args=[self.test_user_author.username]
-            ): "posts/profile.html",
-            reverse(
-                "posts:show_post", args=[self.test_post.id]
-            ): "posts/show_post.html",
-            reverse("posts:post_create"): "posts/creation.html",
-            reverse(
-                "posts:post_edit", args=[self.test_post.id]
-            ): "posts/creation.html",
-        }
-
-        for adress, template in used_paths.items():
+        for adress_name in self.correct_page_data:
             cache.clear()
-            with self.subTest(adress=adress):
-                response = self.test_client.get(adress)
+            page = self.correct_page_data[adress_name]
+
+            with self.subTest(adress=adress_name):
+                response = self.test_client.get(page["url"])
                 self.assertTemplateUsed(
                     response,
-                    template,
+                    page["template"],
                     (
-                        f"Проверьте, что адресу {adress} "
-                        f"соответствует шаблон {template}"
+                        f"Проверьте, что адресу {page['url']} "
+                        f"соответствует шаблон {page['template']}"
                     ),
                 )
 
@@ -77,22 +115,21 @@ class PostsURLTest(TestCase):
         """
 
         test_pages = [
-            reverse("posts:index"),
-            reverse("posts:group_list", args=[self.test_group.slug]),
-            reverse(
-                "posts:show_profile", args=[self.test_user_author.username]
-            ),
-            reverse("posts:show_post", args=[self.test_post.id]),
+            self.correct_page_data['index'],
+            self.correct_page_data['group_list'],
+            self.correct_page_data['show_profile'],
+            self.correct_page_data['show_post'],
         ]
 
         for page in test_pages:
+
             with self.subTest(page=page):
-                response = self.test_client.get(page)
+                response = self.test_client.get(page['url'])
                 self.assertEqual(
                     response.status_code,
                     http.client.OK,
                     (
-                        f"Проверьте, что страница {page} "
+                        f"Проверьте, что страница {page['url']} "
                         f"доступна для неавторизованного "
                         f"пользователя"
                     ),
@@ -123,11 +160,16 @@ class PostsURLTest(TestCase):
         """
 
         response = self.test_client.get(
-            reverse("posts:post_create"), follow=True
+            self.correct_page_data['post_create']['url'], follow=True
         )
+
+        redirect = (
+            reverse("users:login") + "?next=" + reverse("posts:post_create")
+        )
+
         self.assertEqual(
             response.redirect_chain,
-            [("/auth/login/?next=/create/", http.client.FOUND)],
+            [(redirect, http.client.FOUND)],
             (
                 "Проверьте, что перенаправляете "
                 "незарегистрированного пользователя на страницу"
@@ -142,7 +184,7 @@ class PostsURLTest(TestCase):
         """
 
         response = self.test_client.get(
-            reverse("posts:post_edit", args=[self.test_post.id]), follow=True
+            self.correct_page_data['post_edit']['url'], follow=True
         )
         self.assertEqual(
             response.redirect_chain,
@@ -163,7 +205,7 @@ class PostsURLTest(TestCase):
         self.test_client.force_login(self.test_user_not_author)
 
         response = self.test_client.get(
-            reverse("posts:post_edit", args=[self.test_post.id]), follow=True
+            self.correct_page_data['post_edit']['url'], follow=True
         )
 
         self.assertEqual(
@@ -181,7 +223,7 @@ class PostsURLTest(TestCase):
 
         self.test_client.force_login(self.test_user_author)
         response = self.test_client.get(
-            reverse("posts:post_edit", args=[self.test_post.id])
+            self.correct_page_data['post_edit']['url']
         )
         self.assertEqual(
             response.status_code,

@@ -11,8 +11,8 @@ from django.views.generic import (
     ListView,
     UpdateView,
 )
-from django.views.generic.list import MultipleObjectMixin
 from django.urls import reverse
+from django.views.generic.list import MultipleObjectMixin
 
 from .forms import CommentForm, FeedbackForm, PostForm
 from .models import Comment, Follow, Group, Post
@@ -94,9 +94,11 @@ class ShowPostView(
             **kwargs
         )
 
-        for comment_child in self.object.comments.filter(
+        comment_children = self.object.comments.filter(
             is_child=True
-        ).select_related("author"):
+        ).select_related("author")
+
+        for comment_child in comment_children:
 
             if "treads" not in context:
                 context["treads"] = {comment_child.child_id: [comment_child]}
@@ -108,7 +110,7 @@ class ShowPostView(
                         comment_child
                     )
 
-        context["comments_count"] = len(self.get_queryset())
+        context["comments_count"] = self.get_queryset().count()
 
         # Тесты ЯП требуют ищут эту форму от неавторизованного пользователя...
         # if self.request.user.id:
@@ -334,17 +336,11 @@ class ProfileFollowView(LoginRequiredMixin, CreateView):
     def dispatch(self, request, *args, **kwargs):
         author_to_follow = self.get_object()
 
-        # LoginRequiredMixin почему-то пропускают сюда анонимного пользователя
-        # Поэтому добавил проверку на анонима
-        if request.user.id:
-            exists = Follow.objects.filter(
+        if request.user.id and author_to_follow != self.request.user:
+            Follow.objects.get_or_create(
                 user=self.request.user, author=author_to_follow
-            ).exists()
+            )
 
-            if not exists and author_to_follow != self.request.user:
-                Follow.objects.create(
-                    user=self.request.user, author=author_to_follow
-                )
         return super().dispatch(request, *args, *kwargs)
 
     def get(self, request, *args, **kwargs):

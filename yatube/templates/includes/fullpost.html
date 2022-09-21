@@ -5,7 +5,6 @@
 <h2>
     {{ post.title }}
 </h2>
-
 <ul>
 
   {% if not no_author %}
@@ -17,9 +16,7 @@
   <li>
     <p>Дата публикации: {{ post.created|date:"d E Y" }}</p>
   </li>
-
 </ul>
-
 <p>
   {{ post.text|linebreaksbr|truncatewords:30 }}
 </p>
@@ -27,8 +24,6 @@
 {% thumbnail post.image "1280x1024" crop="center" upscale=True as im %}
     <img class="card-img my-2" src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}">
 {% endthumbnail %}
-
-
 
 <p>
     <a href="{% url 'posts:show_post' post.pk %}"> Читать полностью </a>

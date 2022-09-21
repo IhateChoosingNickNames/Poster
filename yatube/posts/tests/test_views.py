@@ -6,14 +6,11 @@ from random import choice
 
 from django import forms
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
-from posts.models import Comment, Follow, Group, Post
-
-User = get_user_model()
+from posts.models import Comment, Follow, Group, Post, User
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
@@ -39,11 +36,11 @@ class PostsViewTest(TestCase):
 
         posts_fields = [
             Post(
-                text=f"Тестовый пост {str(_)}",
+                text=f"Тестовый пост {str(num)}",
                 author=choice(authors),
                 group=choice(groups),
             )
-            for _ in range(test_posts_amount)
+            for num in range(test_posts_amount)
         ]
 
         Post.objects.bulk_create(posts_fields)
@@ -58,7 +55,7 @@ class PostsViewTest(TestCase):
         response = self.test_client.get(reverse("posts:index"))
 
         # context_object_name = "posts"
-        latest_post = Post.objects.all()[0]
+        latest_post = Post.objects.first()
         first_index_post = response.context.get("posts")[0]
 
         self.assertEqual(
@@ -108,6 +105,7 @@ class PostsViewTest(TestCase):
         """Проверка передачи корректного котекста на страницу профиля юзера."""
 
         test_users = [self.test_user_1, self.test_user_2]
+        paginate_by = 10
 
         for test_user in test_users:
             response = self.test_client.get(
@@ -121,7 +119,9 @@ class PostsViewTest(TestCase):
 
             # CBV на DetailView + MultipleObjectMixin, поэтому такая проверка
             profile_posts = response.context["object_list"]
-            test_profile_posts = Post.objects.filter(author=test_user)[:10]
+            test_profile_posts = Post.objects.filter(author=test_user)[
+                :paginate_by
+            ]
 
             for post, test_post in zip(profile_posts, test_profile_posts):
                 with self.subTest(post=post):
@@ -143,7 +143,9 @@ class PostsViewTest(TestCase):
         """Проверка передачи корректного котекста на страницу поста."""
 
         posts = Post.objects.all()
-        test_posts = [choice(posts) for _ in range(3)]
+
+        test_posts_amount = 3
+        test_posts = [choice(posts) for _ in range(test_posts_amount)]
 
         for test_post in test_posts:
 
@@ -205,7 +207,7 @@ class PostsViewTest(TestCase):
         # Защита от рандома из фикстур
         tmp = Post.objects.filter(author=self.test_user_2)
         if not tmp:
-            tmp = Post.objects.filter(author=self.test_user_2)
+            tmp = Post.objects.filter(author=self.test_user_1)
 
         test_post = tmp[0]
 
@@ -221,6 +223,8 @@ class PostsViewTest(TestCase):
                 "редактирования поста для автора"
             ),
         )
+
+        self.assertIn("post", response.context)
 
         self.assertEqual(
             response.context["post"],
@@ -301,7 +305,7 @@ class PostsViewTest(TestCase):
         self.assertNotEqual(
             response.context.get("object_list")[0],
             post_data["text"],
-            "Убедитесь, что пост публикуется только в своей " "группе",
+            "Убедитесь, что пост публикуется только в своей группе",
         )
 
 
@@ -439,14 +443,18 @@ class SprintSixTest(TestCase):
                 post = response.context.get("object_list")[0]
                 self.assertTrue(
                     post.image,
-                    (f"Убедитесь, что на странице {page} в последнем созданном"
-                     " посте есть картинка"),
+                    (
+                        f"Убедитесь, что на странице {page} в последнем "
+                        "созданном посте есть картинка"
+                    ),
                 )
                 self.assertEqual(
                     post.image,
                     test_post.image,
-                    (f"Убедитесь, что на странице {page} в последнем созданном"
-                     " посте корректная картинка"),
+                    (
+                        f"Убедитесь, что на странице {page} в последнем "
+                        "созданном посте корректная картинка"
+                    ),
                 )
 
         response = self.test_client.get(
@@ -455,14 +463,18 @@ class SprintSixTest(TestCase):
         post = response.context.get("object")
         self.assertTrue(
             post.image,
-            ("Убедитесь, что на странице show_post в последнем созданном "
-             "посте есть картинка"),
+            (
+                "Убедитесь, что на странице show_post в последнем созданном "
+                "посте есть картинка"
+            ),
         )
         self.assertEqual(
             post.image,
             test_post.image,
-            ("Убедитесь, что на странице show_post в последнем созданном "
-             "посте корректная картинка"),
+            (
+                "Убедитесь, что на странице show_post в последнем созданном "
+                "посте корректная картинка"
+            ),
         )
 
     def test_posts_post_edit_with_image(self):
@@ -550,8 +562,10 @@ class SprintSixTest(TestCase):
         self.assertEqual(
             Comment.objects.count(),
             initital_amount_of_comments,
-            ("Проверьте, что неавторизованный пользователь не может "
-             "комментировать"),
+            (
+                "Проверьте, что неавторизованный пользователь не может "
+                "комментировать"
+            ),
         )
 
         self.test_client.force_login(self.test_user_1)
@@ -624,8 +638,10 @@ class FollowViewTest(TestCase):
         self.assertEqual(
             initial_amount_follows,
             current_amount_follows,
-            ("Убедитесь, что неавторизованный пользователь не может "
-             "подписываться на авторов"),
+            (
+                "Убедитесь, что неавторизованный пользователь не может "
+                "подписываться на авторов"
+            ),
         )
 
         self.test_client.force_login(self.test_user_with_posts_sub)
@@ -653,8 +669,10 @@ class FollowViewTest(TestCase):
         self.assertNotEqual(
             initial_amount_follows,
             current_amount_follows,
-            ("Убедитесь, что авторизованный пользователь может подписываться "
-             "на авторов"),
+            (
+                "Убедитесь, что авторизованный пользователь может "
+                "подписываться на авторов"
+            ),
         )
 
     def test_posts_follow_subscriber_has_correct_feed(self):
@@ -698,14 +716,18 @@ class FollowViewTest(TestCase):
                 self.assertIn(
                     post,
                     response_sub.context["object_list"],
-                    ("Убедитесь, что в ленте отображаются все посты автора, на"
-                     " которого подписан пользователь"),
+                    (
+                        "Убедитесь, что в ленте отображаются все посты автора,"
+                        " на которого подписан пользователь"
+                    ),
                 )
                 self.assertNotIn(
                     post,
                     response_not_sub.context["object_list"],
-                    ("Убедитесь, что в ленте отображаются все посты автора, "
-                     "на которого подписан пользователь"),
+                    (
+                        "Убедитесь, что в ленте отображаются все посты автора,"
+                        " на которого подписан пользователь"
+                    ),
                 )
 
 
@@ -737,31 +759,35 @@ class NewClass(TestCase):
 
         cache_timer_seconds = 20
 
-        # Логика проверки: если кэш включен, то после 2-ого
-        # get-запроса не будет возвращено контекста. Ну и проверка на наличие
-        # ограничения по времени
+        response = self.test_client.get(reverse("posts:index"))
+        initial_content = response.content
+
+        Post.objects.get(id=1).delete()
 
         response = self.test_client.get(reverse("posts:index"))
-
-        cache_control = response.get('cache-control', None)
-        cache_control_time = int(cache_control.split('=')[1])
-
-        self.assertIsNotNone(
-            cache_control,
-            "Проверьте, что добавали кэширование на главную страницу"
+        self.assertEqual(
+            response.content,
+            initial_content,
+            "Проверьте, что добавили кэширование на главную страницу",
         )
+
+        cache.clear()
+
+        response = self.test_client.get(reverse("posts:index"))
+        self.assertNotEqual(
+            response.content,
+            initial_content,
+            "Кэширование работает некорректно",
+        )
+
+        cache_control = response.get("cache-control", None)
+        cache_control_time = int(cache_control.split("=")[1])
 
         self.assertEqual(
             cache_control_time,
             cache_timer_seconds,
-            ("Проверьте, что задали таймер обновления кэша в "
-             f"{cache_timer_seconds} секунд")
-        )
-
-        self.assertIsNotNone(response.context)
-
-        response = self.test_client.get(reverse("posts:index"))
-
-        self.assertIsNone(
-            response.context, "Проверьте, что добавили кэш на главную страницу"
+            (
+                "Проверьте, что задали таймер обновления кэша в "
+                f"{cache_timer_seconds} секунд"
+            ),
         )

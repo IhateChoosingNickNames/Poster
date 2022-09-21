@@ -6,13 +6,11 @@ from django.core.mail import EmailMessage
 from django.utils.translation import gettext_lazy as _
 
 from .models import Comment, Post
+from .utils import ValidationMixin
 from .validators import clean_text
 
-MIN_TEXT_LENGTH = 10
-PROHIBITED_WORDS = []
 
-
-class PostForm(forms.ModelForm):
+class PostForm(forms.ModelForm, ValidationMixin):
     """Форма добавления нового поста и редактирования существующего."""
 
     def __init__(self, *args, **kwargs):
@@ -37,60 +35,28 @@ class PostForm(forms.ModelForm):
             "group": _("Выберите группу из списка (опционально)"),
             "text": _(
                 "Введите текст поста (обязательное поле). Минимальная "
-                f"длина текста - {MIN_TEXT_LENGTH} символов"
+                f"длина текста - {ValidationMixin.MIN_TEXT_LENGTH} символов"
             ),
             "image": _("Загрузите фото (опционально)"),
         }
 
-    def clean_text(self):
-        data = self.cleaned_data["text"]
-        if len(data) < MIN_TEXT_LENGTH:
-            raise forms.ValidationError(
-                _(
-                    "Длинна текста меньше допустимых "
-                    f"{MIN_TEXT_LENGTH} символов."
-                )
-            )
 
-        for word in PROHIBITED_WORDS:
-            if word in data.lower():
-                raise forms.ValidationError(_("Не надо материться."))
-
-        return data
-
-
-class CommentForm(forms.ModelForm):
+class CommentForm(forms.ModelForm, ValidationMixin):
     """Форма добавления нового поста и редактирования существующего."""
 
     class Meta:
         model = Comment
         # Вырезано из-за тестов ЯП.
         # fields = ("text", "image")
-        fields = ("text", )
+        fields = ("text",)
         labels = {"text": _("Текст комментария"), "image": _("Изображение")}
         help_texts = {
             "text": _(
                 "Введите текст поста (обязательное поле). Минимальная "
-                f"длина текста - {MIN_TEXT_LENGTH} символов"
+                f"длина текста - {ValidationMixin.MIN_TEXT_LENGTH} символов"
             ),
             "image": _("Загрузите фото (опционально)"),
         }
-
-    def clean_text(self):
-        data = self.cleaned_data["text"]
-        if len(data) < MIN_TEXT_LENGTH:
-            raise forms.ValidationError(
-                _(
-                    "Длинна текста меньше допустимых "
-                    f"{MIN_TEXT_LENGTH} символов."
-                )
-            )
-
-        for word in PROHIBITED_WORDS:
-            if word in data.lower():
-                raise forms.ValidationError(_("Не надо материться."))
-
-        return data
 
 
 class FeedbackForm(forms.Form):

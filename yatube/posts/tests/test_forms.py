@@ -1,15 +1,14 @@
+import http.client
+import os.path
 import shutil
 import tempfile
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from posts.forms import PostForm
-from posts.models import Group, Post
-
-User = get_user_model()
+from posts.models import Group, Post, User
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
@@ -26,6 +25,12 @@ class PostCreateFormTests(TestCase):
             description="test_description",
         )
 
+        cls.test_group_2 = Group.objects.create(
+            title="test_title_2",
+            slug="test_slug_2",
+            description="test_description_2",
+        )
+
         cls.test_user = User.objects.create_user("test_user")
 
     @classmethod
@@ -37,15 +42,53 @@ class PostCreateFormTests(TestCase):
     def setUp(self):
         self.test_client = Client()
 
+    def test_posts_anonymous_cannot_post(self):
+        """Проверка пост-запроса от неавторизованного пользователя."""
+
+        initial_amount = Post.objects.count()
+
+        post_data_without_author = {"text": "Тестовый текст"}
+
+        post_data_with_author = {
+            "text": "Тестовый текст",
+            "author": self.test_user,
+        }
+
+        self.test_client.post(
+            reverse("posts:post_create"), data=post_data_with_author
+        )
+
+        self.assertEqual(
+            initial_amount,
+            Post.objects.count(),
+            (
+                (
+                    "Проверьте, что неавторизованный пользователь не может "
+                    "создавать посты"
+                )
+            ),
+        )
+
+        self.test_client.post(
+            reverse("posts:post_create"), data=post_data_without_author
+        )
+
+        self.assertEqual(
+            initial_amount,
+            Post.objects.count(),
+            (
+                (
+                    "Проверьте, что неавторизованный пользователь не может "
+                    "создавать посты"
+                )
+            ),
+        )
+
     def test_posts_form_post_create_fields(self):
         """Проверка полей в форме."""
 
         test_form = PostForm()
-        required_fields = [
-            "text",
-            "group",
-            "image"
-        ]
+        required_fields = ["text", "group", "image"]
 
         for field in required_fields:
             with self.subTest(field=field):
@@ -82,12 +125,39 @@ class PostCreateFormTests(TestCase):
         }
 
         self.test_client.force_login(self.test_user)
-        self.test_client.post(reverse("posts:post_create"), data=form_data)
+        response = self.test_client.post(
+            reverse("posts:post_create"), data=form_data, follow=True
+        )
 
         self.assertEqual(
             Post.objects.count(),
             initial_amount_of_posts + 1,
             "Убедитесь, что корректные данные создают пост",
+        )
+
+        last_post = Post.objects.last()
+
+        image_path = os.path.join(TEMP_MEDIA_ROOT + r"\posts", uploaded.name)
+
+        with open(image_path, "rb") as file:
+            saved_image = file.read()
+
+        self.assertEqual(
+            saved_image,
+            small_gif,
+            "Проверьте, что у вас сохраняется корректная картинка",
+        )
+
+        self.assertEqual(
+            last_post.author,
+            self.test_user,
+            "Пост создается не от нужного автора",
+        )
+
+        self.assertEqual(
+            last_post.group,
+            self.test_group,
+            "У поста создается неверная группа",
         )
 
         # Вырезано из-за тестов ЯП.
@@ -108,18 +178,18 @@ class PostCreateFormTests(TestCase):
             ),
         )
 
-        last_post = Post.objects.last()
+        redirect_chain = [
+            reverse("posts:show_profile", args=[self.test_user]),
+            http.client.FOUND,
+        ]
 
-        self.assertEqual(
-            last_post.author,
-            self.test_user,
-            "Пост создается не от нужного автора",
-        )
-
-        self.assertEqual(
-            last_post.group,
-            self.test_group,
-            "У поста создается неверная группа",
+        self.assertRedirects(
+            response,
+            *redirect_chain,
+            msg_prefix=(
+                "Проверьте, что перенаправляете пользователя на "
+                "страницу своего профиля после создания поста"
+            ),
         )
 
     def test_posts_form_post_create_not_valid_data(self):
@@ -162,12 +232,27 @@ class PostCreateFormTests(TestCase):
 
         changed_text = "Проверка редактирования поста"
 
-        self.test_client.post(
+        response = self.test_client.post(
             reverse("posts:post_edit", args=[test_post.id]),
             {
                 # "title": test_post.title,
-                "text": changed_text
+                "text": changed_text,
+                "group": self.test_group_2.id,
             },
+        )
+
+        redirect_chain = [
+            reverse("posts:show_post", args=[test_post.id]),
+            http.client.FOUND,
+        ]
+
+        self.assertRedirects(
+            response,
+            *redirect_chain,
+            msg_prefix=(
+                "Проверьте, что перенаправляете пользователя на "
+                "страницу своего поста после создания"
+            ),
         )
 
         post = Post.objects.last()
@@ -175,5 +260,17 @@ class PostCreateFormTests(TestCase):
         self.assertEqual(
             post.text,
             changed_text,
+            "Проверьте, что при редактировании поста сохраняются " "изменения",
+        )
+
+        self.assertEqual(
+            post.author,
+            self.test_user,
+            "Проверьте, что при редактировании поста сохраняются " "изменения",
+        )
+
+        self.assertEqual(
+            post.group,
+            self.test_group_2,
             "Проверьте, что при редактировании поста сохраняются " "изменения",
         )
