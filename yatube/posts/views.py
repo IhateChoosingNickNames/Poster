@@ -312,7 +312,9 @@ class ShowFollowVies(
         return self.INDEX_TEMPLATE
 
     def get_queryset(self):
-        return Post.objects.filter(author__following__user=self.request.user).select_related('author', 'group')
+        return Post.objects.filter(
+            author__following__user=self.request.user
+        ).select_related("author", "group")
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
