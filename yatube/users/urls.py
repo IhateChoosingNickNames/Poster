@@ -15,13 +15,13 @@ app_name = "users"
 urlpatterns = [
     path(
         "logout/",
-        LogoutView.as_view(template_name="users/logged_out.html"),
+        views.MyLogoutView.as_view(),
         name="logout",
     ),
     path("signup/", views.SignUp.as_view(), name="signup"),
     path(
         "login/",
-        LoginView.as_view(template_name="users/login.html"),
+        views.MyLoginView.as_view(),
         name="login",
     ),
     path(

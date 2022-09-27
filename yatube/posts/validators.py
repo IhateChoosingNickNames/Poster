@@ -4,7 +4,6 @@ from django.utils.translation import gettext_lazy as _
 MIN_TEXT_LENGTH = 10
 PROHIBITED_WORDS = []
 
-
 def clean_text(data):
 
     if len(data) < MIN_TEXT_LENGTH:

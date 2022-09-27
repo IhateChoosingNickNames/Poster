@@ -1,6 +1,8 @@
 from django.contrib.auth import logout
 from django.contrib.auth.forms import PasswordChangeForm, PasswordResetForm
-from django.contrib.auth.views import PasswordChangeView, PasswordResetView
+from django.contrib.auth.views import (LoginView, LogoutView,
+                                       PasswordChangeView, PasswordResetView)
+from django.core.cache import cache
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
 
@@ -33,3 +35,21 @@ class ResetPasswordView(PasswordResetView):
     form_class = PasswordResetForm
     success_url = reverse_lazy("users:password_reset_done")
     template_name = "users/password_reset_form.html"
+
+
+class MyLogoutView(LogoutView):
+
+    template_name = "users/logged_out.html"
+    def render_to_response(self, context, **response_kwargs):
+        cache.clear()
+        return super().render_to_response(context, **response_kwargs)
+
+
+class MyLoginView(LoginView):
+
+    success_url = reverse_lazy("posts:index")
+    template_name = "users/login.html"
+
+    def render_to_response(self, context, **response_kwargs):
+        cache.clear()
+        return super().render_to_response(context, **response_kwargs)

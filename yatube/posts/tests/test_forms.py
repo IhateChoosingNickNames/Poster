@@ -1,3 +1,4 @@
+import datetime
 import http.client
 import os.path
 import shutil
@@ -148,10 +149,13 @@ class PostCreateFormTests(TestCase):
         )
 
         last_post = Post.objects.last()
+        now = datetime.datetime.today()
 
-        image_path = os.path.join(TEMP_MEDIA_ROOT, "posts", uploaded.name)
+        image_path_rel = f"photos/posts/{now.year}/{now.month:02d}/{now.day:02d}/"
 
-        with open(image_path, "rb") as file:
+        image_path_abs = os.path.join(TEMP_MEDIA_ROOT, image_path_rel, uploaded.name)
+
+        with open(image_path_abs, "rb") as file:
             saved_image = file.read()
 
         check_data = [
@@ -162,24 +166,15 @@ class PostCreateFormTests(TestCase):
 
         self.field_checker(check_data)
 
-        # Вырезано из-за тестов ЯП.
-        # now = datetime.datetime.today()
-
-        image_path = "posts/" + uploaded.name
-
         self.assertTrue(
             Post.objects.filter(
                 text=form_data["text"],
-                image=image_path,
-                # Вырезано из-за тестов ЯП.
-                # image=f"photos/posts/{now.year}/{now.month:02d}/"
-                # f"{now.day:02d}/small.gif",
+                image=image_path_rel + uploaded.name,
                 group=self.test_group,
             ).exists(),
             (
                 "Убедитесь, что сохраняется пост и картинка в правильной папке"
-                # "по пути photos/posts/%Y/%m/%d/"
-                "по пути /posts/"
+                " по пути photos/posts/%Y/%m/%d/"
             ),
         )
 
@@ -227,7 +222,7 @@ class PostCreateFormTests(TestCase):
         """Проверка редактирования поста."""
 
         test_post = Post.objects.create(
-            # title="Тестовый заголовок",
+            title="Тестовый заголовок",
             text="Тестовый пост",
             author=self.test_user,
             group=self.test_group,
@@ -240,7 +235,7 @@ class PostCreateFormTests(TestCase):
         response = self.test_client.post(
             reverse("posts:post_edit", args=[test_post.id]),
             {
-                # "title": test_post.title,
+                "title": test_post.title,
                 "text": changed_text,
                 "group": self.test_group_2.id,
             },

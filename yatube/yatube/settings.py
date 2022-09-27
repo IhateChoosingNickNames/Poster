@@ -11,6 +11,8 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '[::1]',
     'testserver',
+    '7IdE.pythonanywhere.com',
+    'www.7IdE.pythonanywhere.com'
 ]
 
 INSTALLED_APPS = [

@@ -33,18 +33,13 @@ class Group(models.Model):
 class Post(CreatedModel):
     """Создание модели постов."""
 
-    # Вырезано из-за тестов ЯП. Храни их бог.
-    # Миграция 0023.
-
-    # title = models.CharField(
-    #     verbose_name="Название поста",
-    #     help_text="Введите Название поста (обязательное поле)",
-    #     max_length=255
-    # )
+    title = models.CharField(
+        verbose_name="Название поста",
+        help_text="Введите Название поста (обязательное поле)",
+        max_length=255
+    )
     image = models.ImageField(
-        # Вырезано из-за тестов ЯП.
-        # upload_to="photos/posts/%Y/%m/%d/",
-        upload_to="posts/",
+        upload_to="photos/posts/%Y/%m/%d/",
         verbose_name="Изображение",
         blank=True,
         null=True,

@@ -19,9 +19,7 @@ class PostForm(forms.ModelForm, ValidationMixin):
 
     class Meta:
         model = Post
-        # Вырезано из-за тестов ЯП.
-        # fields = ("title", "group", "text", "image")
-        fields = ("group", "text", "image")
+        fields = ("title", "group", "text", "image")
         widgets = {"text": forms.Textarea(attrs={"cols": 60, "rows": 10})}
         labels = {
             "title": _("Название поста"),
@@ -46,9 +44,7 @@ class CommentForm(forms.ModelForm, ValidationMixin):
 
     class Meta:
         model = Comment
-        # Вырезано из-за тестов ЯП.
-        # fields = ("text", "image")
-        fields = ("text",)
+        fields = ("text", "image")
         labels = {"text": _("Текст комментария"), "image": _("Изображение")}
         help_texts = {
             "text": _(

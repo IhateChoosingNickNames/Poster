@@ -494,12 +494,14 @@ class SprintSixTest(TestCase):
         )
 
         post = Post.objects.create(
+            title="Тестовый заголовок",
             text="Тестовый текст без картинки",
             author=self.test_user_1,
             image=uploaded,
         )
 
         form_data = {
+            "title": "Еще один заголовок",
             "text": "Тестовый текст с картинкой",
         }
 

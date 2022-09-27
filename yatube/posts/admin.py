@@ -13,6 +13,17 @@ class PostAdmin(admin.ModelAdmin):
     readonly_fields = ("group",)
     list_select_related = ("author", "group")
 
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        request = kwargs['request']
+        formfield = super().formfield_for_dbfield(db_field, **kwargs)
+
+        if db_field.name == 'group':
+            choices = getattr(request, '_myfield_choices_cache', None)
+            if choices is None:
+                request._myfield_choices_cache = choices = list(formfield.choices)
+            formfield.choices = choices
+
+        return formfield
 
 @admin.register(Group)
 class GroupAdmin(admin.ModelAdmin):
