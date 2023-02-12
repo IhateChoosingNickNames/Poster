@@ -10,7 +10,8 @@ urlpatterns = [
     path("auth/", include("django.contrib.auth.urls")),
     path("", include("posts.urls", namespace="posts")),
     path("about/", include("about.urls", namespace="about")),
-    path("captcha/", include("captcha.urls"))
+    path("captcha/", include("captcha.urls")),
+    path("api/", include("api.urls"))
 ]
 
 

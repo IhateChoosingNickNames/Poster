@@ -1,10 +1,12 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
+
 from core.models import CreatedModel
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.urls import reverse
 
 User = get_user_model()
-
+TEXT_TRANCATECHARS = 30
 
 class Group(models.Model):
     """Создание модели группы."""
@@ -66,13 +68,12 @@ class Post(CreatedModel):
         """Мета для вывода человекочитаемых имен"""
 
         default_related_name = "post"
-        ordering = ["-created"]
+        ordering = ("-created", )
         verbose_name = "пост"
         verbose_name_plural = "Посты"
 
     def __str__(self):
-        text_trancatechars = 15
-        return self.text[:text_trancatechars]
+        return self.text[:TEXT_TRANCATECHARS]
 
     def get_absolute_url(self):
         return reverse("posts:show_post", kwargs={"post_id": self.pk})
@@ -116,14 +117,13 @@ class Comment(CreatedModel):
     class Meta:
         """Мета для вывода человекочитаемых имен и сортировки"""
 
-        ordering = ["-created"]
+        ordering = ("-created", )
         default_related_name = "commentary"
         verbose_name_plural = "Комментарии"
         verbose_name = "комментарий"
 
     def __str__(self):
-        text_trancatechars = 30
-        return self.text[:text_trancatechars]
+        return self.text[:TEXT_TRANCATECHARS]
 
 
 class Follow(models.Model):
@@ -136,7 +136,7 @@ class Follow(models.Model):
         verbose_name="Пользователь",
         help_text="Укажите пользователя ленты",
     )
-    author = models.ForeignKey(
+    following = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         blank=True,
@@ -147,9 +147,45 @@ class Follow(models.Model):
     )
 
     class Meta:
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
-                fields=['user', 'author'],
+                fields=('user', 'following'),
                 name='unique_follow'
-            )
+            ),
+        )
+
+
+class Rating(models.Model):
+    """Модель лайков/дизлайков на авторов."""
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="liker",
+        verbose_name="Пользователь",
+        help_text="Пользователь, который ставит лайк/дизлайк",
+    )
+    post = models.ForeignKey(
+        Post,
+        on_delete=models.CASCADE,
+        related_name="likes",
+        verbose_name="Лайк поста",
+        help_text="Пост, которому ставят лайк/дизлайк",
+    )
+    rating = models.IntegerField(
+        verbose_name="Лайки",
+        help_text="Укажите лайк или дизлайк",
+        default=0,
+        validators=[
+            MinValueValidator(-1),
+            MaxValueValidator(1)
         ]
+    )
+
+    class Meta:
+        constraints = (
+            models.UniqueConstraint(
+                fields=('user', 'post', 'rating'),
+                name='unique_rating'
+            ),
+        )

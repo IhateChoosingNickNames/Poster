@@ -20,6 +20,10 @@
         </li>
 
         <li class="list-group-item">
+          Рейтинг: <b>{{ rating }}</b>
+        </li>
+
+        <li class="list-group-item">
           Дата публикации: {{ post.pub_date|date:"d E Y" }}
         </li>
 
@@ -75,10 +79,20 @@
                     <a class="btn btn-primary"  href="{% url 'posts:post_delete' post.id %}">
                       Удалить пост
                     </a>
-                  {% endif %}
+                  {% else %}
+
                     <a class="btn btn-primary" href="{% url 'posts:post_comment' post.id %}">
                       Комментировать пост
                     </a>
+
+                    <a class="btn btn-primary" href="{% url 'posts:post_like' post.id %}">
+                      Лайк
+                    </a>
+
+                    <a class="btn btn-primary" href="{% url 'posts:post_dislike' post.id %}">
+                      Дизлайк
+                    </a>
+                  {% endif %}
               </p>
           </div>
 

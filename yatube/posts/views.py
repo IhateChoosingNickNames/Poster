@@ -2,6 +2,7 @@ import datetime
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Sum
 from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import (
     CreateView,
@@ -15,7 +16,7 @@ from django.urls import reverse
 from django.views.generic.list import MultipleObjectMixin
 
 from .forms import CommentForm, FeedbackForm, PostForm
-from .models import Comment, Follow, Group, Post
+from .models import Comment, Follow, Group, Post, Rating
 from .utils import PaginationMixin, TemplateMixin
 
 User = get_user_model()
@@ -52,20 +53,6 @@ class PostGroupView(TemplateMixin, PaginationMixin, ListView):
         return Post.objects.filter(
             group__slug=self.kwargs["slug"]
         ).select_related("group", "author")
-
-
-class PostGroupArchiveView(PostGroupView):
-    """Неиспользуемый в данном проекте класс. Поэтому есть дублирование кода.
-
-    В дальнейшем я изменю PostGroupView и уберу оттуда отображение всех постов.
-
-    Это будет функция непосредственно архива.
-    """
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["archive"] = True
-        return context
 
 
 class GroupListView(TemplateMixin, ListView):
@@ -109,13 +96,13 @@ class ShowPostView(
                     context["treads"][comment_child.child_id].append(
                         comment_child
                     )
-
+        post_rating = Rating.objects.filter(post=self.get_object()).aggregate(
+            rating=Sum("rating")
+        )["rating"]
+        if not post_rating:
+            post_rating = 0
         context["comments_count"] = self.get_queryset().count()
-
-        # Тесты ЯП требуют ищут эту форму от неавторизованного пользователя...
-        # if self.request.user.id:
-        #     context["form"] = CommentForm()
-
+        context["rating"] = post_rating
         context["form"] = CommentForm()
         return context
 
@@ -158,10 +145,9 @@ class ShowProfileView(
             user=self.request.user.id, author=self.object.id
         ).exists()
 
+        context["following"] = False
         if exists:
             context["following"] = True
-        else:
-            context["following"] = False
 
         return context
 
@@ -362,3 +348,35 @@ class ProfileUnfollowView(LoginRequiredMixin, DeleteView):
 
     def get(self, request, *args, **kwargs):
         return self.post(request, *args, **kwargs)
+
+
+class RatingView(LoginRequiredMixin, CreateView):
+
+    model = Rating
+    pk_url_kwarg = "post_id"
+
+    def get_object(self, queryset=None):
+        return Post.objects.get(id=self.kwargs["post_id"])
+
+    def dispatch(self, request, *args, **kwargs):
+        post = self.get_object()
+        post_author = post.author
+
+        if request.user.id and post_author != self.request.user:
+
+            rating = Rating.objects.filter(user=self.request.user, post=post)
+            step = 1
+            if "/dislike" in self.request.path:
+                step = -1
+            if not rating:
+                Rating.objects.create(
+                    user=self.request.user, post=post, rating=step
+                )
+            else:
+                value = rating[0].rating + step
+                if abs(value) <= abs(step):
+                    rating.update(rating=value)
+        return super().dispatch(request, *args, *kwargs)
+
+    def get(self, request, *args, **kwargs):
+        return redirect("posts:show_post", self.kwargs["post_id"])

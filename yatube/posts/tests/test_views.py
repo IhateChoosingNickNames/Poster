@@ -358,7 +358,6 @@ class PostsPaginationTest(TestCase):
             with self.subTest(adress=adress):
 
                 response = self.test_client.get(adress)
-
                 self.assertTrue(
                     response.context.get("is_paginated"),
                     f"Проверьте, что добавили пагинатор на "
