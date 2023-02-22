@@ -12,6 +12,8 @@ Used technologies:
     - Simple JWT 4.7.2
     - Pytest 4.4.0
     - django-simple-captcha 0.5.17
+    - python-dotenv==0.21.1
+
 Features:
 -
     - You can make posts with images in different groups
@@ -22,11 +24,17 @@ Features:
     - Added API support
     - Added support for sending emails
 
-Instructions: Go to ../yatube/ and launch server using command.
-And don't forget to install captcha.
-    
-    # python manage.py runserver
+## Installation:
+- Clone the repository
+- Create, activate virtual env and install requirements: 
+##### pip install -r requirements.txt
+- make migrations, migrate and launch the server
+##### python manage.py makemigrations
+##### python manage.py migrate
+##### python manage.py runserver
+
 After that site is available at your localhost url 
 (most common case: http://127.0.0.1:8000/)
+
 
 Author: Larkin Michael

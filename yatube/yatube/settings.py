@@ -1,9 +1,11 @@
 import os
 from datetime import timedelta
+from dotenv import load_dotenv
 
+load_dotenv()
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-SECRET_KEY = 'modje)vf9q#og6&)7$%7(ml$(tn%aml&-r_4z9p9m0!*c4c8rm'
+SECRET_KEY = os.getenv("SECRET_KEY", default="modje)vf9q#og6&)7$%7(ml$(tn%aml&-r_4z9p9m0!*c4c8rm")
 
 DEBUG = True
 
